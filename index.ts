@@ -18,7 +18,7 @@ async function query(query: string) {
             column.cards.edges.map((e: any) => e.node.content);
         prs.sort((a, b) => {
             const aIsPopular = a.labels.edges.some(ale=>ale.node.name === 'Popular package');
-            const bIsPopular = !b.labels.edges.some(ale=>ale.node.name === 'Popular package');
+            const bIsPopular = b.labels.edges.some(ale=>ale.node.name === 'Popular package');
             if (aIsPopular !== bIsPopular) {
                 return aIsPopular ? 1 : -1;
             } else {
