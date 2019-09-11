@@ -13,15 +13,25 @@ async function query(query: string) {
         console.log(`project: ${project.name} ${project.url}`);
         const column = project.columns.edges[0].node;
         console.log(`column: ${column.name} (${column.cards.totalCount})`);
-        const prs: {title: string, url: string, additions: number, deletions: number}[] = column.cards.edges.map((e: any) => e.node.content);
-        prs.sort((a,b) => (b.additions + b.deletions) - (a.additions + a.deletions));
+        console.log();
+        const prs: { title: string, url: string, additions: number, deletions: number, labels: { edges: { node: { name: string } }[] } }[] = 
+            column.cards.edges.map((e: any) => e.node.content);
+        prs.sort((a, b) => {
+            const aIsPopular = a.labels.edges.some(ale=>ale.node.name === 'Popular package');
+            const bIsPopular = !b.labels.edges.some(ale=>ale.node.name === 'Popular package');
+            if (aIsPopular !== bIsPopular) {
+                return aIsPopular ? 1 : -1;
+            } else {
+                return (a.additions + a.deletions) - (b.additions + b.deletions);
+            }
+        });
         prs.forEach(pr => {
             console.log(pr.title);
             console.log(pr.url);
             console.log(`${pr.additions} additions, ${pr.deletions} deletions`);
+            pr.labels.edges.filter(e => e.node.name === 'Popular package').map(e => `**${e.node.name}**`).forEach(f => console.log(f));
             console.log();
         })
-        //console.log(prs.map(pr => JSON.stringify(pr)).join('\n'));
     } catch (error) {
         console.log(error);
     }
@@ -49,6 +59,13 @@ query(`
                                         url
                                         additions
                                         deletions
+                                        labels(first:5) {
+                                            edges {
+                                            node {
+                                                name
+                                            }
+                                            }
+                                        }
                                     }
                                 }
                             }
